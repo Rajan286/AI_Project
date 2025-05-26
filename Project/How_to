@@ -1,0 +1,13 @@
+Mac Terminal
+1. RabbitMQ im  Terminal starten 
+"brew services start rabbitmq"
+
+VS Code
+2. "rabbitmq_setup.py" im 1. Terminal starten
+3. "peregos_consumer.py" im 2. Terminal starten
+4. "wyseflow_consumer.py" im 3. Terminal starten
+5. "his_producer_gui.py" im 4. Terminal starten
+
+HIS GUI 
+6. Studentendaten eingeben
+7. senden

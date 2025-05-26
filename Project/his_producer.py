@@ -18,7 +18,7 @@ def send_student_data(student):
 if __name__ == "__main__":
     student_data = {
         "id": "123456",
-        "name": "Max Mustermann",
+        "name": "Parmdip",
         "programs": ["Informatik", "Wirtschaft"],
         "credits": {
             "Informatik": 120,
