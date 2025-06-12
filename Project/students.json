@@ -20,5 +20,15 @@
     "credits": {
       "Wirtschaftsinformatik": 60
     }
+  },
+  {
+    "id": "Batuhan Erdogan",
+    "name": "345678",
+    "programs": [
+      "Wirtschaftinformatik"
+    ],
+    "credits": {
+      "Wirtschaftinformatik": 40
+    }
   }
 ]
