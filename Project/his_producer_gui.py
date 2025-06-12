@@ -1,107 +1,136 @@
 import tkinter as tk
-from tkinter import messagebox
-import pika
 import json
+import pika
 import os
 
-STORAGE_FILE = 'students.json'
+STUDENT_FILE = "students.json"
 
-# Hardcodierter Student (immer mitsenden)
-DEFAULT_STUDENT = {
-    "id": "000000",
-    "name": "Systemtester",
-    "programs": ["Systemprüfung"],
-    "credits": {"Systemprüfung": 100}
-}
+class HISStudentRegistrationGUI:
+    def __init__(self, master):
+        self.master = master
+        master.title("Register Student (HIS)")
 
-# Lade bestehende Studenten aus Datei
-def load_students():
-    if not os.path.exists(STORAGE_FILE):
-        return []
-    with open(STORAGE_FILE, 'r') as f:
-        return json.load(f)
+        tk.Label(master, text="Full Name:").pack()
+        self.entry_name = tk.Entry(master)
+        self.entry_name.pack()
 
-# Speichere neue Studentenliste in Datei
-def save_students(students):
-    with open(STORAGE_FILE, 'w') as f:
-        json.dump(students, f, indent=2)
+        tk.Label(master, text="Student ID:").pack()
+        self.entry_id = tk.Entry(master)
+        self.entry_id.pack()
 
-def send_all_students(new_student):
-    students = load_students()
-    students.append(new_student)
-    save_students(students)
+        tk.Label(master, text="Study Programs (comma separated):").pack()
+        self.entry_programs = tk.Entry(master)
+        self.entry_programs.pack()
 
-    # Füge den hardcodierten Student hinzu
-    full_list = [DEFAULT_STUDENT] + students
+        tk.Label(master, text="Credits per Program (comma separated):").pack()
+        self.entry_credits = tk.Entry(master)
+        self.entry_credits.pack()
 
-    try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-        channel = connection.channel()
+        tk.Button(master, text="Register Student", command=self.register_student).pack(pady=5)
+        tk.Button(master, text="Show All Students", command=self.show_all_students).pack(pady=5)
 
-        for student in full_list:
-            message = json.dumps(student)
-            channel.basic_publish(exchange='', routing_key='peregos_queue', body=message)
-            channel.basic_publish(exchange='', routing_key='wyseflow_queue', body=message)
+        self.output = tk.Text(master, height=10, width=55)
+        self.output.pack(pady=10)
 
-        connection.close()
-        messagebox.showinfo("Erfolg", f"{len(full_list)} Studenten erfolgreich gesendet!")
-    except Exception as e:
-        messagebox.showerror("Verbindungsfehler", str(e))
+    def register_student(self):
+        name = self.entry_name.get().strip()
+        student_id = self.entry_id.get().strip()
+        programs = [s.strip() for s in self.entry_programs.get().split(",") if s.strip()]
+        credits_raw = self.entry_credits.get().split(",")
+        credits = []
 
-def on_send():
-    student_id = entry_id.get().strip()
-    name = entry_name.get().strip()
-    programs = [p.strip() for p in entry_programs.get().split(',') if p.strip()]
-    credits_input = [c.strip() for c in entry_credits.get().split(',') if c.strip()]
+        for c in credits_raw:
+            c = c.strip()
+            if c.isdigit():
+                credits.append(int(c))
+            else:
+                self.output.insert(tk.END, f"⚠️ Invalid credit: '{c}'\n")
+                return
 
-    if not (student_id and name and programs and credits_input):
-        messagebox.showerror("Fehler", "Bitte alle Felder korrekt ausfüllen!")
-        return
+        if not name or not student_id or len(programs) != len(credits):
+            self.output.insert(tk.END, "⚠️ Check fields: Name, ID, and program/credit count match.\n")
+            return
 
-    if len(programs) != len(credits_input):
-        messagebox.showerror("Fehler", "Programme und Credits müssen gleich viele Einträge haben.")
-        return
+        student = {
+            "name": name,
+            "id": student_id,
+            "study_programs": programs,
+            "credits": credits
+        }
 
-    try:
-        credits = {programs[i]: int(credits_input[i]) for i in range(len(programs))}
-    except ValueError:
-        messagebox.showerror("Fehler", "Credits müssen ganze Zahlen sein.")
-        return
+        self.save_student(student)
+        self.send_to_systems(student)
 
-    student = {
-        "id": student_id,
-        "name": name,
-        "programs": programs,
-        "credits": credits
-    }
+        self.output.insert(tk.END, f"✅ Registered and sent: {name} ({student_id})\n")
 
-    send_all_students(student)
-    # Felder leeren nach erfolgreichem Senden
-    entry_id.delete(0, tk.END)
-    entry_name.delete(0, tk.END)
-    entry_programs.delete(0, tk.END)
-    entry_credits.delete(0, tk.END)
+        self.entry_name.delete(0, tk.END)
+        self.entry_id.delete(0, tk.END)
+        self.entry_programs.delete(0, tk.END)
+        self.entry_credits.delete(0, tk.END)
 
-# GUI Aufbau
-root = tk.Tk()
-root.title("HIS Producer GUI")
+    def send_to_systems(self, student):
+        if not student["study_programs"] or not student["credits"]:
+            msg = "⚠️ No study program or credits provided – nothing sent.\n"
+            self.output.insert(tk.END, msg)
+            print(msg)
+            return
 
-tk.Label(root, text="Student ID").grid(row=0, column=0, sticky='e')
-entry_id = tk.Entry(root)
-entry_id.grid(row=0, column=1)
+        try:
+            peregos_data = {
+                "name": student["name"],
+                "id": student["id"],
+                "study_programs": student["study_programs"]
+            }
 
-tk.Label(root, text="Name").grid(row=1, column=0, sticky='e')
-entry_name = tk.Entry(root)
-entry_name.grid(row=1, column=1)
+            wyseflow_data = {
+                "name": student["name"],
+                "id": student["id"],
+                "study_programs": student["study_programs"],
+                "credits": student["credits"]
+            }
 
-tk.Label(root, text="Studiengänge (mit Komma)").grid(row=2, column=0, sticky='e')
-entry_programs = tk.Entry(root)
-entry_programs.grid(row=2, column=1)
+            print("→ Sent to Peregos:", peregos_data)
+            print("→ Sent to WyseFlow:", wyseflow_data)
 
-tk.Label(root, text="Credits (mit Komma)").grid(row=3, column=0, sticky='e')
-entry_credits = tk.Entry(root)
-entry_credits.grid(row=3, column=1)
+            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+            channel = connection.channel()
+            channel.queue_declare(queue='peregos_queue', durable=True)
+            channel.queue_declare(queue='wyseflow_queue', durable=True)
 
-tk.Button(root, text="Senden", command=on_send).grid(row=4, column=0, columnspan=2, pady=10)
+            channel.basic_publish(exchange='', routing_key='peregos_queue', body=json.dumps(peregos_data))
+            channel.basic_publish(exchange='', routing_key='wyseflow_queue', body=json.dumps(wyseflow_data))
+            connection.close()
 
-root.mainloop()
+        except Exception as e:
+            error_msg = f"⚠️ Error while sending: {e}\n"
+            self.output.insert(tk.END, error_msg)
+            print(error_msg)
+
+    def save_student(self, student):
+        students = []
+        if os.path.exists(STUDENT_FILE):
+            try:
+                with open(STUDENT_FILE, "r") as f:
+                    students = json.load(f)
+            except json.JSONDecodeError:
+                pass
+
+        students.append(student)
+        with open(STUDENT_FILE, "w") as f:
+            json.dump(students, f, indent=2)
+
+    def show_all_students(self):
+        self.output.delete("1.0", tk.END)
+        if os.path.exists(STUDENT_FILE):
+            try:
+                with open(STUDENT_FILE, "r") as f:
+                    students = json.load(f)
+                    for s in students:
+                        self.output.insert(tk.END, f"{s['name']} ({s['id']}): {s['study_programs']} – {s['credits']}\n")
+            except Exception as e:
+                self.output.insert(tk.END, f"⚠️ Could not load students: {e}\n")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = HISStudentRegistrationGUI(root)
+    root.mainloop()

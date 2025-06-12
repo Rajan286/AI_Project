@@ -1,28 +1,36 @@
 import pika
 import json
 
-def send_student_data(student):
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
+class HISPublisher:
+    def __init__(self):
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        self.channel = self.connection.channel()
+        self.channel.queue_declare(queue='peregos_queue', durable=True)
+        self.channel.queue_declare(queue='wyseflow_queue', durable=True)
 
-    message = json.dumps(student)
+    def send(self, name, student_id, study_programs, credits):
+        data_peregos = {
+            "name": name,
+            "id": student_id,
+            "study_programs": study_programs
+        }
+        data_wyseflow = {
+            "name": name,
+            "id": student_id,
+            "study_program": study_programs[0],
+            "credits": credits[0]
+        }
 
-    # Nachrichten an beide Queues schicken
-    channel.basic_publish(exchange='', routing_key='peregos_queue', body=message)
-    channel.basic_publish(exchange='', routing_key='wyseflow_queue', body=message)
+        self.channel.basic_publish(exchange='', routing_key='peregos_queue',
+                                   body=json.dumps(data_peregos))
+        self.channel.basic_publish(exchange='', routing_key='wyseflow_queue',
+                                   body=json.dumps(data_wyseflow))
+        print("Nachrichten gesendet an Peregos und WyseFlow.")
 
-    print(f"Sent student data: {student['id']}")
-
-    connection.close()
+    def close(self):
+        self.connection.close()
 
 if __name__ == "__main__":
-    student_data = {
-        "id": "123456",
-        "name": "Parmdip",
-        "programs": ["Informatik", "Wirtschaft"],
-        "credits": {
-            "Informatik": 120,
-            "Wirtschaft": 60
-        }
-    }
-    send_student_data(student_data)
+    sender = HISPublisher()
+    sender.send("Max Mustermann", "123456", ["Informatik", "Mathematik"], [120, 90])
+    sender.close()

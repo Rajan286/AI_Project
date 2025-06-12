@@ -3,9 +3,9 @@ import json
 import threading
 import os
 
-DATA_FILE = "peregos_data.json"
+DATA_FILE = "wyseflow_data.json"
 
-class PeregosReceiver:
+class WyseFlowReceiver:
     def __init__(self, callback):
         self.callback = callback
 
@@ -13,16 +13,16 @@ class PeregosReceiver:
         def run():
             connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
             channel = connection.channel()
-            channel.queue_declare(queue='peregos_queue', durable=True)
+            channel.queue_declare(queue='wyseflow_queue', durable=True)
 
             def on_message(ch, method, properties, body):
                 data = json.loads(body)
-                print("[Peregos] Nachricht empfangen")
+                print("[WyseFlow] Nachricht empfangen")
                 self.save_to_file(data)
                 self.callback(data)
 
-            channel.basic_consume(queue='peregos_queue', on_message_callback=on_message, auto_ack=True)
-            print("[Peregos] Lauscht auf Nachrichten...")
+            channel.basic_consume(queue='wyseflow_queue', on_message_callback=on_message, auto_ack=True)
+            print("[WyseFlow] Lauscht auf Nachrichten...")
             channel.start_consuming()
 
         thread = threading.Thread(target=run, daemon=True)
