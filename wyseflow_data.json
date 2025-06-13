@@ -32,5 +32,17 @@
       100,
       150
     ]
+  },
+  {
+    "name": "Mehmet G\u00f6kcan",
+    "id": "1536363",
+    "study_programs": [
+      "Bauingeneurwesen B.Sc",
+      "Architektur B.A."
+    ],
+    "credits": [
+      20,
+      50
+    ]
   }
 ]

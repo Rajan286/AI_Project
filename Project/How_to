@@ -2,13 +2,16 @@
     RabbitMQ im  Terminal starten 
     "brew services start rabbitmq"
 
-2. VS Code
+2. RabbitMQ im Browser öffnen
+"http://localhost:15672/#/"
+
+3. VS Code
     "main_gui_launcher.py" via Playbutton starten
 
-3. GUI (Vs Code)
+4. GUI (Vs Code)
     1. Alle Fenster Öffnen
     2. Daten eingeben
 
-4. Mac Terminal 
+5. Mac Terminal 
     RabbitMQ im Terminal schließen
     "brew services stop rabbitmq"
