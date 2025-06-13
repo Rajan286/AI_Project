@@ -2,69 +2,35 @@
   {
     "name": "Rajan Kakkar",
     "id": "1538362",
-    "study_program": "Wirtschaftsinformatik",
-    "credits": 60
-  },
-  {
-    "name": "Batuhan Erdogan",
-    "id": "1518522",
     "study_programs": [
-      "Wirtschaftsinformatik"
+      "Wirtschaftsinformatik B.Sc.",
+      "Informatik B.Sc."
     ],
     "credits": [
-      120
-    ]
-  },
-  {
-    "name": "Parmdip Sangha",
-    "id": "1234567",
-    "study_programs": [
-      "Informatik"
-    ],
-    "credits": [
-      20
-    ]
-  },
-  {
-    "name": "Marc Lauri Franke",
-    "id": "2345678",
-    "study_programs": [
-      "Informatik",
-      "Wirtschaftsinformatik"
-    ],
-    "credits": [
-      60,
-      40
-    ]
-  },
-  {
-    "name": "Marvin Ehmler",
-    "id": "3456789",
-    "study_programs": [
-      "Wirtschaftsinformatik"
-    ],
-    "credits": [
-      100
-    ]
-  },
-  {
-    "name": "Murat G\u00f6t",
-    "id": "6969696",
-    "study_programs": [
-      "Informatik"
-    ],
-    "credits": [
+      120,
       60
     ]
   },
   {
-    "name": "Mehmet G\u00f6kcan",
-    "id": "1010110",
+    "name": "Batuhan Erdogan",
+    "id": "1515822",
     "study_programs": [
-      "Wirtschaftsinformatik"
+      "Wirtschaftsinformatik B.Sc."
     ],
     "credits": [
       100
+    ]
+  },
+  {
+    "name": "Parmdip Sangha",
+    "id": "1438147",
+    "study_programs": [
+      "Informatik B.Sc.",
+      "Germanistik B.Sc."
+    ],
+    "credits": [
+      100,
+      150
     ]
   }
 ]

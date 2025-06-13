@@ -8,7 +8,7 @@ DATA_FILE = "peregos_data.json"
 class PeregosGUI:
     def __init__(self, root):
         self.root = root
-        root.title("Peregos – Examination Council View")
+        root.title("Peregos")
 
         self.text = tk.Text(root, height=20, width=60)
         self.text.pack(padx=10, pady=10)

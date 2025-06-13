@@ -13,8 +13,8 @@ class MainLauncher:
         tk.Label(root, text="Launch one of the systems:").pack(pady=10)
 
         tk.Button(root, text="HIS – Register Student", width=30, command=self.launch_his).pack(pady=5)
-        tk.Button(root, text="Peregos – Examination Council", width=30, command=self.launch_peregos).pack(pady=5)
-        tk.Button(root, text="WyseFlow – Final Thesis System", width=30, command=self.launch_wyseflow).pack(pady=5)
+        tk.Button(root, text="Peregos", width=30, command=self.launch_peregos).pack(pady=5)
+        tk.Button(root, text="WyseFlow", width=30, command=self.launch_wyseflow).pack(pady=5)
 
     def launch_his(self):
         path = os.path.join(self.base_dir, "his_producer_gui.py")

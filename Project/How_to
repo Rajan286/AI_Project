@@ -1,13 +1,14 @@
-Mac Terminal
-1. RabbitMQ im  Terminal starten 
-"brew services start rabbitmq"
+1. Mac Terminal
+    RabbitMQ im  Terminal starten 
+    "brew services start rabbitmq"
 
-VS Code
-2. "rabbitmq_setup.py" im 1. Terminal starten
-3. "peregos_consumer.py" im 2. Terminal starten
-4. "wyseflow_consumer.py" im 3. Terminal starten
-5. "his_producer_gui.py" im 4. Terminal starten
+2. VS Code
+    "main_gui_launcher.py" via Playbutton starten
 
-HIS GUI 
-6. Studentendaten eingeben
-7. senden
+3. GUI (Vs Code)
+    1. Alle Fenster Öffnen
+    2. Daten eingeben
+
+4. Mac Terminal 
+    RabbitMQ im Terminal schließen
+    "brew services stop rabbitmq"

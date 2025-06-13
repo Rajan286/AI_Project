@@ -8,7 +8,7 @@ DATA_FILE = "wyseflow_data.json"
 class WyseFlowGUI:
     def __init__(self, root):
         self.root = root
-        root.title("WyseFlow – Final Thesis Applications")
+        root.title("WyseFlow")
 
         self.show_all_var = tk.IntVar(value=0)
 
