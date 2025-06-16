@@ -1,17 +1,23 @@
-1. Mac Terminal
-    RabbitMQ im  Terminal starten 
-    "brew services start rabbitmq"
+1. Start RabbitMQ via Terminal
+Open your terminal and start the RabbitMQ service with the following command:
+brew services start rabbitmq
 
-2. RabbitMQ im Browser öffnen
-"http://localhost:15672/#/"
+2. Open the RabbitMQ Management Interface
+In your browser, navigate to:
+http://localhost:15672/#/
+Use the default credentials:
+Username: guest
+Password: guest
 
-3. VS Code
-    "main_gui_launcher.py" via Playbutton starten
+3. Launch the Application in VS Code
+Open the file main_gui_launcher.py and start the program by clicking the "Run" or "Play" button in VS Code.
 
-4. GUI (Vs Code)
-    1. Alle Fenster Öffnen
-    2. Daten eingeben
+4. Use the GUI Interfaces
+Once the application starts:
+Open all three GUI windows
+In the Peregos and WyseFlow windows, click the "Start Listening" button to begin receiving messages.
+In the HIS window, enter the student’s data and click "Send" to dispatch the data to both systems.
 
-5. Mac Terminal 
-    RabbitMQ im Terminal schließen
-    "brew services stop rabbitmq"
+5. Stop RabbitMQ after Testing
+Once you're finished, you can stop the RabbitMQ service by running the following command in the terminal:
+brew services stop rabbitmq
