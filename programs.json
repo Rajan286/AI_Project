@@ -1,0 +1,26 @@
+{
+  "Wirtschaftsinformatik B.Sc.": {
+    "max_credits": 180,
+    "start_semester": "WS"
+  },
+  "Informatik B.Sc.": {
+    "max_credits": 180,
+    "start_semester": "WS"
+  },
+  "Bauingeneurwesen B.Sc": {
+    "max_credits": 210,
+    "start_semester": "SS"
+  },
+  "Architektur B.A.": {
+    "max_credits": 240,
+    "start_semester": "WS"
+  },
+  "Germanistik B.A.": {
+    "max_credits": 180,
+    "start_semester": "SS"
+  },
+  "Test": {
+    "max_credits": 210,
+    "start_semester": "SS"
+  }
+}
