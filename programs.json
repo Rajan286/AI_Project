@@ -18,9 +18,5 @@
   "Germanistik B.A.": {
     "max_credits": 180,
     "start_semester": "SS"
-  },
-  "Test": {
-    "max_credits": 210,
-    "start_semester": "SS"
   }
 }
