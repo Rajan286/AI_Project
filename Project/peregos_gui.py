@@ -1,107 +1,131 @@
 import tkinter as tk
-from tkinter import messagebox
-import threading
 import json
 import os
 import pika
+import threading
+from tkinter import scrolledtext, messagebox
+
+PEREGOS_FILE = "peregos_data.json"
+PROCESSED_IDS_FILE = "peregos_processed_ids.json"
+QUEUE_NAME = "peregos"
+RABBITMQ_HOST = "127.0.0.1"
 
 class PeregosGUI:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Peregos Receiver")
-        self.root.geometry("500x300")
-        self.root.resizable(False, False)
+    def __init__(self, master):
+        self.master = master
+        master.title("Peregos Consumer")
 
-        frame = tk.Frame(root, padx=20, pady=20)
-        frame.pack(expand=True, fill="both")
+        self.connection_label = tk.Label(master, text="RabbitMQ: UNKNOWN", bg="gray", fg="white", width=40)
+        self.connection_label.pack(pady=5)
 
-        self.status_label = tk.Label(frame, text="Status: Not running", font=("Arial", 12))
+        self.status_label = tk.Label(master, text="Status: -", width=40)
         self.status_label.pack(pady=5)
 
-        self.latest_label = tk.Label(frame, text="Latest Student: ---", font=("Arial", 11), wraplength=450, justify="left")
-        self.latest_label.pack(pady=10)
+        self.student_label = tk.Label(master, text="Last Student: -", width=40)
+        self.student_label.pack(pady=5)
 
-        self.start_button = tk.Button(frame, text="Start Listening", font=("Arial", 11), command=self.start_receiver)
+        self.start_button = tk.Button(master, text="Start Listening", command=self.start_consuming)
         self.start_button.pack(pady=5)
 
-        self.view_students_button = tk.Button(frame, text="View All Students", font=("Arial", 11), command=self.show_students)
-        self.view_students_button.pack(pady=5)
+        self.view_all_button = tk.Button(master, text="View All Students", command=self.show_all_students)
+        self.view_all_button.pack(pady=2)
 
-    def start_receiver(self):
-        self.status_label.config(text="Status: Listening for messages...")
-        self.start_button.config(state=tk.DISABLED)
-        threading.Thread(target=self.run_receiver, daemon=True).start()
+        self.output_text = scrolledtext.ScrolledText(master, width=60, height=15)
+        self.output_text.pack(pady=5)
 
-    def run_receiver(self):
-        def callback(ch, method, properties, body):
-            try:
-                student = json.loads(body)
-                name = student.get("name")
-                student_id = student.get("id")
-                programs = student.get("study_programs")
+        self.processed_ids = self.load_existing_ids()
+        self.update_connection_status(self.check_connection())
 
-                if not name or not student_id or not programs:
-                    self.update_latest("[Invalid message received]")
-                    return
-
-                entry = {
-                    "name": name,
-                    "id": student_id,
-                    "study_programs": programs
-                }
-
-                # Update JSON file
-                filename = "peregos_data.json"
-                if os.path.exists(filename):
-                    with open(filename, "r") as f:
-                        data = json.load(f)
-                else:
-                    data = []
-
-                if not any(s["id"] == student_id for s in data):
-                    data.append(entry)
-                    with open(filename, "w") as f:
-                        json.dump(data, f, indent=2)
-
-                # Update GUI
-                self.update_latest(f"{name} (ID: {student_id}) - {', '.join(programs)}")
-
-            except Exception as e:
-                self.update_latest(f"[Error] {e}")
-
+    def check_connection(self):
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-            channel = connection.channel()
-            channel.queue_declare(queue='peregos_queue', durable=True)
-            channel.basic_consume(queue='peregos_queue', on_message_callback=callback, auto_ack=True)
-            channel.start_consuming()
-        except Exception as e:
-            self.update_latest(f"[Connection Error] {e}")
-            self.status_label.config(text="Status: Error")
-            self.start_button.config(state=tk.NORMAL)
+            conn = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
+            conn.close()
+            return True
+        except:
+            return False
 
-    def update_latest(self, text):
-        self.latest_label.config(text=f"Latest Student: {text}")
-
-    def show_students(self):
-        popup = tk.Toplevel(self.root)
-        popup.title("All Peregos Students")
-        popup.geometry("500x300")
-
-        if os.path.exists("peregos_data.json"):
-            with open("peregos_data.json", "r") as f:
-                students = json.load(f)
+    def update_connection_status(self, ok):
+        if ok:
+            self.connection_label.config(text="RabbitMQ: CONNECTED", bg="green")
         else:
-            students = []
+            self.connection_label.config(text="RabbitMQ: NOT AVAILABLE", bg="red")
 
-        text = tk.Text(popup, wrap='word')
-        text.pack(expand=True, fill='both')
-        for s in students:
-            info = f"Name: {s['name']}, ID: {s['id']}, Programs: {', '.join(s['study_programs'])}\n"
-            text.insert(tk.END, info)
-        text.config(state='disabled')
+    def load_existing_ids(self):
+        if not os.path.exists(PROCESSED_IDS_FILE):
+            return set()
+        with open(PROCESSED_IDS_FILE, 'r') as f:
+            return set(json.load(f))
 
-if __name__ == '__main__':
+    def save_processed_id(self, student_id):
+        self.processed_ids.add(student_id)
+        with open(PROCESSED_IDS_FILE, 'w') as f:
+            json.dump(list(self.processed_ids), f)
+
+    def store_student_data(self, student):
+        if not os.path.exists(PEREGOS_FILE):
+            data = []
+        else:
+            with open(PEREGOS_FILE, 'r') as f:
+                data = json.load(f)
+
+        entry = {
+            "name": student["name"],
+            "id": student["id"],
+            "study_programs": student["study_programs"]
+        }
+
+        data.append(entry)
+        with open(PEREGOS_FILE, 'w') as f:
+            json.dump(data, f, indent=2)
+
+    def show_all_students(self):
+        if not os.path.exists(PEREGOS_FILE):
+            self.output_text.insert(tk.END, "No data found.\n")
+            return
+        with open(PEREGOS_FILE, 'r') as f:
+            data = json.load(f)
+        self.output_text.delete("1.0", tk.END)
+        for entry in data:
+            self.output_text.insert(tk.END, f"{entry['id']} – {entry['name']} – {', '.join(entry['study_programs'])}\n")
+
+    def callback(self, ch, method, properties, body):
+        try:
+            student = json.loads(body.decode())
+
+            if student["id"] in self.processed_ids:
+                self.status_label.config(text=f"Duplicate skipped: {student['id']}")
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+                return
+
+            self.student_label.config(text=f"Last Student: {student['name']} ({student['id']})")
+            self.status_label.config(text="Student received")
+            self.store_student_data(student)
+            self.save_processed_id(student["id"])
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+        except Exception as e:
+            self.status_label.config(text=f"Error: {e}")
+            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+
+    def consume(self):
+        try:
+            conn = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
+            channel = conn.channel()
+            channel.queue_declare(queue=QUEUE_NAME, durable=True)
+            channel.basic_qos(prefetch_count=1)
+            self.update_connection_status(True)
+        except Exception as e:
+            self.update_connection_status(False)
+            self.status_label.config(text=f"Connection Error: {e}")
+            return
+
+        channel.basic_consume(queue=QUEUE_NAME, on_message_callback=self.callback)
+        channel.start_consuming()
+
+    def start_consuming(self):
+        thread = threading.Thread(target=self.consume, daemon=True)
+        thread.start()
+
+if __name__ == "__main__":
     root = tk.Tk()
-    app = PeregosGUI(root)
+    gui = PeregosGUI(root)
     root.mainloop()

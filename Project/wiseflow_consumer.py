@@ -1,53 +1,76 @@
 import pika
 import json
+import logging
 import os
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
+WISEFLOW_FILE = "wyseflow_data.json"
+PROCESSED_IDS_FILE = "wyseflow_processed_ids.json"
+QUEUE_NAME = "wyseflow"
+RABBITMQ_HOST = "127.0.0.1"  # explizit IPv4
+
+def load_existing_ids():
+    if not os.path.exists(PROCESSED_IDS_FILE):
+        return set()
+    with open(PROCESSED_IDS_FILE, 'r') as f:
+        return set(json.load(f))
+
+def save_processed_id(student_id, processed_ids):
+    processed_ids.add(student_id)
+    with open(PROCESSED_IDS_FILE, 'w') as f:
+        json.dump(list(processed_ids), f)
+
+def store_student_data(student):
+    if not os.path.exists(WISEFLOW_FILE):
+        data = []
+    else:
+        with open(WISEFLOW_FILE, 'r') as f:
+            data = json.load(f)
+
+    new_entry = {
+        "name": student["name"],
+        "id": student["id"],
+        "study_programs": student["study_programs"],
+        "credits": student["credits"]
+    }
+
+    data.append(new_entry)
+    with open(WISEFLOW_FILE, 'w') as f:
+        json.dump(data, f, indent=2)
+
+    logging.info(f"Student gespeichert: {student['id']}")
 
 def callback(ch, method, properties, body):
     try:
-        student = json.loads(body)
-        name = student["name"]
-        sid = student["id"]
-        programs = student["study_programs"]
-        credits = student["credits"]
+        student = json.loads(body.decode())
 
-        entry = {
-            "name": name,
-            "id": sid,
-            "study_programs": programs,
-            "credits": credits
-        }
+        if student["id"] in processed_ids:
+            logging.warning(f"Duplikat ignoriert: {student['id']}")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
 
-        filename = "wyseflow_data.json"
-        if os.path.exists(filename):
-            with open(filename, "r") as f:
-                data = json.load(f)
-        else:
-            data = []
-
-        if not any(s["id"] == sid for s in data):
-            data.append(entry)
-            with open(filename, "w") as f:
-                json.dump(data, f, indent=2)
-
-        print(f"[x] Student {name} processed for WyseFlow")
+        store_student_data(student)
+        save_processed_id(student["id"], processed_ids)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
     except Exception as e:
-        print(f"[!] Failed to process message: {e}")
+        logging.error(f"Fehler beim Verarbeiten der Nachricht: {e}")
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
-def start_consumer():
-    try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-        channel = connection.channel()
-        channel.queue_declare(queue='wiseflow_queue')
-        channel.basic_consume(queue='wiseflow_queue', on_message_callback=callback, auto_ack=True)
-        print("[*] Waiting for messages in WyseFlow...")
-        channel.start_consuming()
-    except Exception as e:
-        print(f"[!] WyseFlow connection error: {e}")
+def main():
+    global processed_ids
+    processed_ids = load_existing_ids()
 
-class WyseFlowReceiver:
-    def start(self):
-        start_consumer()
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
+    channel = connection.channel()
+    channel.queue_declare(queue=QUEUE_NAME, durable=True)
+    channel.basic_qos(prefetch_count=1)
 
-if __name__ == '__main__':
-    start_consumer()
+    channel.basic_consume(queue=QUEUE_NAME, on_message_callback=callback)
+
+    logging.info("WiseFlow Consumer gestartet...")
+    channel.start_consuming()
+
+if __name__ == "__main__":
+    main()

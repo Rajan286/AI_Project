@@ -21,5 +21,40 @@
       "Informatik B.Sc.",
       "Germanistik B.Sc."
     ]
+  },
+  {
+    "name": "Test Test",
+    "id": "1234567",
+    "study_programs": [
+      "Test"
+    ]
+  },
+  {
+    "name": "Test Zwei",
+    "id": "2222222",
+    "study_programs": [
+      "Wirtschaftsinformatik B.Sc."
+    ]
+  },
+  {
+    "name": "Test drei",
+    "id": "3333333",
+    "study_programs": [
+      "Informatik B.Sc."
+    ]
+  },
+  {
+    "name": "Test Vier",
+    "id": "4444444",
+    "study_programs": [
+      "Test"
+    ]
+  },
+  {
+    "name": "Test F\u00fcnf",
+    "id": "5555555",
+    "study_programs": [
+      "Test"
+    ]
   }
 ]
